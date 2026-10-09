@@ -157,6 +157,11 @@ CFLAGS := $(CPPFLAGS) -Wall -Wstrict-prototypes
 endif
 
 CFLAGS += $(call cc-option,-fno-stack-protector)
+# gcc 15+ defaults to the C23 dialect, where `bool` is a keyword; this
+# 2020-era vendor tree typedefs bool itself. Pin the dialect to gnu11 and
+# permit the benign redefinitions; cc-option keeps older toolchains working.
+CFLAGS += $(call cc-option,-std=gnu11)
+CFLAGS += $(call cc-option,-fpermissive)
 
 ifneq ($(AP_VERSION), )
 CFLAGS += -DCONFIG_AP_VERSION='"$(AP_VERSION)"'
