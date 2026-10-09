@@ -197,10 +197,25 @@ static void cm4_sec(void)
 
 	/* cm4 is always enabled */
 
+#ifndef CONFIG_SPL_FW_CM4_DEFER
 	/* protect soft-reset bit */
 	val = REG32(SPRD_REG_FW_AON_APB_BASE + REG_FW_AON_APB_WR0);
 	val |= BIT_REG_FW0_AON_CM4_SYS_SOFT_RST_WR_SEC;
 	REG32(SPRD_REG_FW_AON_APB_BASE + REG_FW_AON_APB_WR0) = val;
+#else
+	/*
+	 * CM4_DEFER: leave AON CM4_SYS_SOFT_RST writable from the non-secure
+	 * world. Kernels without an SMC path into trustos (e.g. mainline
+	 * Linux with the sprd_pmsys remoteproc driver) must release the CM4
+	 * (pm_sys) reset themselves; with the stock TZPC write-protect the
+	 * write is silently ignored and the rproc reports a phantom
+	 * "running" while the core never boots. Opt-in: default builds keep
+	 * the stock protection. Vendor Android is unaffected either way --
+	 * its kernel toggles this bit through trusty SMC calls, which work
+	 * whether or not the bit is protected.
+	 */
+	(void)val;
+#endif
 }
 
 static void cp_sec (void)
